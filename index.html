@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>迷い込んだ迷路</title>
+
+<style>
+body{
+margin:0;
+overflow:hidden;
+font-family:sans-serif;
+background:black;
+color:white;
+}
+
+#ui{
+position:absolute;
+top:10px;
+left:10px;
+font-size:20px;
+}
+
+#message{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:40px;
+text-align:center;
+display:none;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+
+</head>
+<body>
+
+<div id="ui">
+⏱ 残り時間: <span id="time">180</span>
+</div>
+
+<div id="message"></div>
+
+<script>
+
+let scene = new THREE.Scene();
+let camera = new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
+let renderer = new THREE.WebGLRenderer();
+
+renderer.setSize(window.innerWidth,window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const light = new THREE.PointLight(0xffffff,1);
+light.position.set(10,10,10);
+scene.add(light);
+
+const floorGeo = new THREE.PlaneGeometry(50,50);
+const floorMat = new THREE.MeshStandardMaterial({color:0x444444});
+const floor = new THREE.Mesh(floorGeo,floorMat);
+floor.rotation.x = -Math.PI/2;
+scene.add(floor);
+
+const wallGeo = new THREE.BoxGeometry(2,2,2);
+const wallMat = new THREE.MeshStandardMaterial({color:0x888888});
+
+const maze = [
+[1,1,1,1,1,1,1],
+[1,0,0,0,0,0,1],
+[1,0,1,1,1,0,1],
+[1,0,1,0,1,0,1],
+[1,0,1,0,0,0,1],
+[1,0,0,0,1,0,1],
+[1,1,1,1,1,1,1]
+];
+
+for(let z=0;z<maze.length;z++){
+for(let x=0;x<maze[z].length;x++){
+if(maze[z][x]===1){
+let wall = new THREE.Mesh(wallGeo,wallMat);
+wall.position.set(x*2,1,z*2);
+scene.add(wall);
+}
+}
+}
+
+const goalGeo = new THREE.BoxGeometry(1,1,1);
+const goalMat = new THREE.MeshStandardMaterial({color:0x00ff00});
+const goal = new THREE.Mesh(goalGeo,goalMat);
+goal.position.set(10,0.5,10);
+scene.add(goal);
+
+camera.position.set(2,1.5,2);
+
+let keys = {};
+
+document.addEventListener("keydown",e=>keys[e.key]=true);
+document.addEventListener("keyup",e=>keys[e.key]=false);
+
+function move(){
+
+const speed=0.1;
+
+if(keys["w"]) camera.position.z-=speed;
+if(keys["s"]) camera.position.z+=speed;
+if(keys["a"]) camera.position.x-=speed;
+if(keys["d"]) camera.position.x+=speed;
+
+}
+
+let time=180;
+
+setInterval(()=>{
+
+time--;
+document.getElementById("time").textContent=time;
+
+if(time<=0){
+
+document.getElementById("message").style.display="block";
+document.getElementById("message").innerHTML=
+"巨大な鎌を持ったケンタウルスが現れた…<br>GAME OVER";
+
+}
+
+},1000);
+
+function animate(){
+
+requestAnimationFrame(animate);
+
+move();
+
+if(camera.position.distanceTo(goal.position)<1){
+
+document.getElementById("message").style.display="block";
+document.getElementById("message").innerHTML=
+"迷路を抜けた…<br>目の前には街が広がっている";
+
+}
+
+renderer.render(scene,camera);
+
+}
+
+animate();
+
+</script>
+
+</body>
+</html>
